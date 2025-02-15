@@ -6,7 +6,8 @@ var chalk = require("chalk");
 /**
  * Lodash clonedeep & merge
  */
-var _ = require("./lodash.custom");
+var merge = require("lodash.merge");
+var cloneDeep = require("lodash.clonedeep");
 
 /**
  * Default configuration.
@@ -66,7 +67,7 @@ var Logger = function(config) {
     config = config || {};
 
     this._mute = false;
-    this.config = _.merge({}, defaults, config);
+    this.config = merge({}, defaults, config);
     this.addLevelMethods(this.config.levels);
     this._memo = {};
 
@@ -251,12 +252,12 @@ Logger.prototype.mute = function (bool) {
  */
 Logger.prototype.clone = function (opts) {
 
-    var config = _.cloneDeep(this.config);
+    var config = cloneDeep(this.config);
 
     if (typeof opts === "function") {
         config = opts(config) || {};
     } else {
-        config = _.merge({}, config, opts || {});
+        config = merge({}, config, opts || {});
     }
 
     return new Logger(config);
