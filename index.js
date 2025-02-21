@@ -52,7 +52,6 @@ var defaults = {
     useLevelPrefixes: false
 };
 
-
 /**
  * @param {Object} config
  * @constructor
@@ -66,7 +65,7 @@ var Logger = function(config) {
     config = config || {};
 
     this._mute = false;
-    this.config = _.merge({}, defaults, config);
+    this.config = safeMerge({}, defaults, config);
     this.addLevelMethods(this.config.levels);
     this._memo = {};
 
@@ -91,6 +90,7 @@ Logger.prototype.setOnce = function (path, value) {
 
     return this;
 };
+
 /**
  * Add convenience method such as
  * logger.warn("msg")
@@ -112,6 +112,7 @@ Logger.prototype.addLevelMethods = function (items) {
         }
     }, this);
 };
+
 /**
  * Reset the state of the logger.
  * @returns {Logger}
@@ -194,7 +195,7 @@ Logger.prototype.unprefixed = function (level, msg) {
 
 /**
  * @param {Array} args
- * @param {()=>String} msg
+ * @param {String} msg
  * @param {String} level
  * @param {boolean} [unprefixed]
  * @returns {Logger}
@@ -207,7 +208,7 @@ Logger.prototype.logOne = function (args, msg, level, unprefixed) {
 
     args = args.slice(2);
 
-    var incomingMessage = typeof msg === "string" ? msg : msg();
+    var incomingMessage = typeof msg === "string" ? msg : msg;
 
     if (this.config.useLevelPrefixes && !unprefixed) {
         incomingMessage = this.config.prefixes[level] + incomingMessage;
@@ -256,7 +257,7 @@ Logger.prototype.clone = function (opts) {
     if (typeof opts === "function") {
         config = opts(config) || {};
     } else {
-        config = _.merge({}, config, opts || {});
+        config = safeMerge({}, config, opts || {});
     }
 
     return new Logger(config);
@@ -273,6 +274,23 @@ function strOrFn(input) {
         return input();
     }
     throw new Error("unreachable");
+}
+
+/**
+ * Safely merge objects, preventing prototype pollution
+ * @param {Object} target
+ * @param {Object} sources
+ * @returns {Object}
+ */
+function safeMerge(target, ...sources) {
+    sources.forEach(source => {
+        Object.keys(source).forEach(key => {
+            if (key !== "__proto__" && key !== "constructor" && key !== "prototype") {
+                target[key] = source[key];
+            }
+        });
+    });
+    return target;
 }
 
 module.exports.Logger  = Logger;
